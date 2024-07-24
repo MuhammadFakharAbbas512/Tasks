@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat Room</title>
+  <style>
+    #chatBox {
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 300px;
+      height: 300px;
+      overflow-y: scroll;
+    }
+    #messageInput {
+      width: 200px;
+    }
+    .message {
+      padding: 5px;
+      margin: 5px 0;
+      clear: both;
+    }
+    .sender {
+      text-align: right;
+      background-color: #d1e7dd;
+      border-radius: 10px;
+      padding: 5px 10px;
+      margin-right: 10px;
+    }
+    .receiver {
+      text-align: left;
+      background-color: #f8d7da;
+      border-radius: 10px;
+      padding: 5px 10px;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Chat Room</h2>
+  <div id="chatBox"></div>
+  <input type="text" id="messageInput" placeholder="Type your message">
+  <button id="sendButton">Send</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const chatBox = document.getElementById('chatBox');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+
+    sendButton.addEventListener('click', () => {
+      const msg = messageInput.value;
+      appendMessage(msg, 'sender');
+      socket.emit('message', msg);
+      messageInput.value = '';
+    });
+
+    socket.on('message', (msg) => {
+      appendMessage(msg, 'receiver');
+    });
+
+    function appendMessage(msg, type) {
+      const messageElement = document.createElement('div');
+      messageElement.textContent = msg;
+      messageElement.classList.add('message', type);
+      chatBox.appendChild(messageElement);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>
