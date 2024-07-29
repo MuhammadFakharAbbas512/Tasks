@@ -12,7 +12,7 @@ io.on('connection', (socket) => {
 
   socket.on('message', (msg) => {
     console.log('Message received:', msg);
-    io.emit('message', msg); // Broadcast message to all connected clients
+    socket.broadcast.emit('message', msg); // Broadcast message to all connected clients except the sender
   });
 
   socket.on('disconnect', () => {
