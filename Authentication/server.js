@@ -3,7 +3,8 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const User = require('./models/userModel'); // Adjust the path as necessary
-
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 const app = express();
 const port = 3000;
 
@@ -23,6 +24,10 @@ mongoose.connect('mongodb://localhost:27017/Auth', {}).then(() => {
 const hashPassword = async (password) => {
   const saltRounds = 10;
   return await bcrypt.hash(password, saltRounds);
+};
+// Function to generate JWT
+const generateToken = (user) => {
+  return jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
 // Authentication middleware for testing purposes
