@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registered Users</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Registered Users</h1>
+    <nav>
+        <a href="/signup">Sign Up</a> |
+        <a href="/login">Login</a> |
+        <a href="/update">Update Profile</a> |
+        <a href="/delete">Delete User</a>
+    </nav>
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Phone Number</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody">
+            <!-- User rows will be inserted here -->
+        </tbody>
+    </table>
+    <script>
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/users');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const users = await response.json();
+                const userTableBody = document.getElementById('userTableBody');
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.username}</td>
+                        <td>${user.phoneNumber}</td>
+                        <td>${user.email}</td>
+                    `;
+                    userTableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        }
+
+        // Fetch users when the page loads
+        window.onload = fetchUsers;
+    </script>
+</body>
+</html>
