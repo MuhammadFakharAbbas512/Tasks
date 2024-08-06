@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profiles Pagination</title>
+  <style>
+    .user-card {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 5px;
+    }
+    .pagination {
+      margin: 20px 0;
+    }
+    .pagination button {
+      padding: 10px;
+      margin: 0 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>User Profiles</h1>
+  <div id="users"></div>
+  <div class="pagination">
+    <button onclick="prevPage()">Previous</button>
+    <button onclick="nextPage()">Next</button>
+  </div>
+
+  <script>
+    let currentPage = 1;
+
+    async function fetchUsers(page) {
+      const response = await fetch(`/api/users?page=${page}`);
+      const data = await response.json();
+
+      const usersDiv = document.getElementById('users');
+      usersDiv.innerHTML = '';
+      data.users.forEach(user => {
+        const userCard = document.createElement('div');
+        userCard.className = 'user-card';
+        userCard.innerHTML = `
+          <h3>${user.username}</h3>
+          <p>Email: ${user.email}</p>
+          <p>Phone: ${user.phoneNumber}</p>
+        `;
+        usersDiv.appendChild(userCard);
+      });
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        fetchUsers(currentPage);
+      }
+    }
+
+    function nextPage() {
+      currentPage++;
+      fetchUsers(currentPage);
+    }
+
+    // Initial fetch
+    fetchUsers(currentPage);
+  </script>
+</body>
+</html>
