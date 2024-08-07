@@ -3,79 +3,226 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Profiles Pagination</title>
+  <title>User List</title>
   <style>
-    .user-card {
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      color: #444;
+      margin-top: 20px;
+    }
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .controls {
+      margin-bottom: 20px;
+    }
+    label {
+      margin-right: 10px;
+    }
+    select, button {
+      padding: 8px 12px;
       border: 1px solid #ccc;
-      padding: 10px;
-      margin: 10px;
-      border-radius: 5px;
+      border-radius: 4px;
+      font-size: 16px;
+      margin-right: 10px;
+      background-color: #fff;
+    }
+    button {
+      cursor: pointer;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f8f9fa;
+      color: #333;
+      cursor: pointer;
+    }
+    th:hover {
+      background-color: #e2e6ea;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    tbody tr:hover {
+      background-color: #e9ecef;
     }
     .pagination {
-      margin: 20px 0;
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
     }
     .pagination button {
-      padding: 10px;
       margin: 0 5px;
-      cursor: pointer;
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #007bff;
+      color: #fff;
+      font-size: 16px;
+    }
+    .pagination button:disabled {
+      background-color: #c0c0c0;
+      cursor: not-allowed;
+    }
+    .pagination button:hover:not(:disabled) {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
-  <h1>User Profiles</h1>
-  <form id="searchForm">
-    <input type="text" id="searchInput" placeholder="Search by username, email, or phone">
-    <button type="submit">Search</button>
-  </form>
-  <div id="users"></div>
-  <div class="pagination">
-    <button onclick="prevPage()">Previous</button>
-    <button onclick="nextPage()">Next</button>
+  <div class="container">
+    <h1>User List</h1>
+    <div class="controls">
+      <label for="sortBy">Sort By:</label>
+      <select id="sortBy">
+        <option value="username">Username</option>
+        <option value="email">Email</option>
+      </select>
+      <label for="sortOrder">Order:</label>
+      <select id="sortOrder">
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+      </select>
+      <button onclick="sortUsers()">Sort</button>
+      <label > Search:</label>
+      <input type="text" id="filter" placeholder="Search...">
+     <button onclick="searchUsers()">Search</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Phone Number</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <!-- User rows will be inserted here -->
+      </tbody>
+    </table>
+    <div class="pagination">
+      <button id="prevPage" onclick="prevPage()">Previous</button>
+      <button id="nextPage" onclick="nextPage()">Next</button>
+    </div>
   </div>
-
   <script>
     let currentPage = 1;
-    let currentSearch = '';
+    const limit = 7;
+    let currentSortBy = 'username';
+    let currentSortOrder = 'asc';
+    let currentFilter = '';
 
-    document.getElementById('searchForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      currentSearch = document.getElementById('searchInput').value;
-      currentPage = 1;
-      fetchUsers(currentPage, currentSearch);
-    });
-
-    async function fetchUsers(page, search) {
-      const response = await fetch(`/api/users?page=${page}&search=${search}`);
+    async function fetchUsers() {
+    //  const sortBy = document.getElementById('sortBy').value;
+     // const sortOrder = document.getElementById('sortOrder').value;
+      //const filter = document.getElementById('filter').value;
+      const response = await fetch(`/api/users?page=${currentPage}&limit=${limit}&sortBy=${currentSortBy}&sortOrder=${currentSortOrder}&search=${currentFilter}`);
       const data = await response.json();
-
-      const usersDiv = document.getElementById('users');
-      usersDiv.innerHTML = '';
+      const userTableBody = document.getElementById('userTableBody');
+      userTableBody.innerHTML = '';
       data.users.forEach(user => {
-        const userCard = document.createElement('div');
-        userCard.className = 'user-card';
-        userCard.innerHTML = `
-          <h3>${user.username}</h3>
-          <p>Email: ${user.email}</p>
-          <p>Phone: ${user.phoneNumber}</p>
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${user.username}</td>
+          <td>${user.email}</td>
+          <td>${user.phoneNumber}</td>
         `;
-        usersDiv.appendChild(userCard);
+        userTableBody.appendChild(row);
       });
+      // Manage pagination button state
+    //  document.getElementById('prevPage').disabled = currentPage === 1;
+     // document.getElementById('nextPage').disabled = data.users.length < limit;
+    }
+
+    function sortUsers() {
+      currentSortBy = document.getElementById('sortBy').value;
+      currentSortOrder = document.getElementById('sortOrder').value;
+      fetchUsersBySort();
+    }
+
+    function searchUsers() {
+      
+      currentFilter = document.getElementById('filter').value;
+//      currentPage = 1;
+      fetchUsersBySearch();
+    }
+
+    
+async function fetchUsersBySearch() {
+  const response = await fetch(`/api/users/search?page=${currentPage}&limit=${limit}&search=${currentFilter}`);
+  const data = await response.json();
+  const userTableBody = document.getElementById('userTableBody');
+  userTableBody.innerHTML = '';
+  data.users.forEach(user => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${user.username}</td>
+      <td>${user.email}</td>
+      <td>${user.phoneNumber}</td>
+    `;
+    userTableBody.appendChild(row);
+  });
+}
+async function fetchUsersBySort() {
+  const response = await fetch(`/api/users/sort?page=${currentPage}&limit=${limit}&sortBy=${currentSortBy}&sortOrder=${currentSortOrder}`);
+  const data = await response.json();
+  const userTableBody = document.getElementById('userTableBody');
+  userTableBody.innerHTML = '';
+  data.users.forEach(user => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${user.username}</td>
+      <td>${user.email}</td>
+      <td>${user.phoneNumber}</td>
+    `;
+    userTableBody.appendChild(row);
+  });
+}
+
+    function nextPage() {
+      currentPage++;
+      fetchUsers();
     }
 
     function prevPage() {
       if (currentPage > 1) {
         currentPage--;
-        fetchUsers(currentPage, currentSearch);
+        fetchUsers();
       }
     }
 
-    function nextPage() {
-      currentPage++;
-      fetchUsers(currentPage, currentSearch);
-    }
-
-    // Initial fetch
-    fetchUsers(currentPage, currentSearch);
+    // Fetch users on page load
+    window.onload = fetchUsers;
   </script>
 </body>
 </html>
