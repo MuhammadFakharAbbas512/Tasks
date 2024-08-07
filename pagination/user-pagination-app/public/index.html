@@ -23,6 +23,10 @@
 </head>
 <body>
   <h1>User Profiles</h1>
+  <form id="searchForm">
+    <input type="text" id="searchInput" placeholder="Search by username, email, or phone">
+    <button type="submit">Search</button>
+  </form>
   <div id="users"></div>
   <div class="pagination">
     <button onclick="prevPage()">Previous</button>
@@ -31,9 +35,17 @@
 
   <script>
     let currentPage = 1;
+    let currentSearch = '';
 
-    async function fetchUsers(page) {
-      const response = await fetch(`/api/users?page=${page}`);
+    document.getElementById('searchForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      currentSearch = document.getElementById('searchInput').value;
+      currentPage = 1;
+      fetchUsers(currentPage, currentSearch);
+    });
+
+    async function fetchUsers(page, search) {
+      const response = await fetch(`/api/users?page=${page}&search=${search}`);
       const data = await response.json();
 
       const usersDiv = document.getElementById('users');
@@ -53,17 +65,17 @@
     function prevPage() {
       if (currentPage > 1) {
         currentPage--;
-        fetchUsers(currentPage);
+        fetchUsers(currentPage, currentSearch);
       }
     }
 
     function nextPage() {
       currentPage++;
-      fetchUsers(currentPage);
+      fetchUsers(currentPage, currentSearch);
     }
 
     // Initial fetch
-    fetchUsers(currentPage);
+    fetchUsers(currentPage, currentSearch);
   </script>
 </body>
 </html>

@@ -1,7 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const populate = require('./populate'); // Adjust the path as necessary
+const path = require('path');
+// const User = require('./models/user'); 
+const userRoutes = require('./routes/users');
+
 
 const app = express();
 const port = 3000;
@@ -12,61 +15,38 @@ app.use(express.static('public'));
 
 // MongoDB connection
 mongoose.connect('mongodb://localhost:27017/Auth', {}).then(() => {
-    console.log('Connected to MongoDB');
-  }).catch(err => {
-    console.error('Failed to connect to MongoDB', err);
-  });
-  
-const userSchema = new mongoose.Schema({
-  username: String,
-  email: String,
-  phoneNumber: String,
+  console.log('Connected to MongoDB');
+}).catch(err => {
+  console.error('Failed to connect to MongoDB', err);
 });
 
-const User = mongoose.models.User // mongoose.model('User', userSchema);
+const userSchema = new mongoose.Schema({
+  username: String,
+  email: { type: String, unique: true },
+  phoneNumber: { type: String, unique: true },
+});
 
-// Populate the database with users
-const users = [
-    { username: 'Imran', email: 'Imran1@gmail.com', phoneNumber: '03034567890' },
-    { username: 'Ali', email: 'ali110@gmail.com', phoneNumber: '03134567891' },
-    { username: 'Bilal', email: 'bilal5@gmail.com', phoneNumber: '031234567890' },
-    { username: 'Meesum', email: 'meesum@gmail.com', phoneNumber: '032234567891' },
-    { username: 'Qumber', email: 'qumber5@gmail.com', phoneNumber: '033234567890' },
-    { username: 'Zohair', email: 'zohair@gmail.com', phoneNumber: '034234567891' },
-    { username: 'Qasim', email: 'qasim07@gmail.com', phoneNumber: '033334567890' },
-    { username: 'Zain', email: 'zain18@gmail.com', phoneNumber: '033434567891' },
-    { username: 'Huzaifa', email: 'huzz8@gmail.com', phoneNumber: '033534567890' },
-    { username: 'Malik', email: 'mmalik10@gmail.com', phoneNumber: '033634567891' }
-   
-  ];
-async function insertUsers(users) {
-    for (const user of users) {
-      try {
-        await User.updateOne(
-          { username: user.username },
-          { $setOnInsert: user },
-          { upsert: true }
-        );
-      } catch (err) {
-        console.error('Error inserting data:', err);
-      }
-    }
-    console.log('User Data inserted');
-//    mongoose.connection.close();
-  }
-  
-  insertUsers(users);
+const User = mongoose.model('User', userSchema);
 
+// Pagination and Search/ Sort API
+app.use('/', userRoutes);
 
-// Pagination API
 app.get('/api/users', async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 7, search = '' } = req.query;
+  const searchQuery = {
+    $or: [
+      { username: new RegExp(search, 'i') },
+      { email: new RegExp(search, 'i') },
+      { phoneNumber: new RegExp(search, 'i') },
+    ],
+  };
+
   try {
-    const users = await User.find()
+    const users = await User.find(search ? searchQuery : {})
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .exec();
-    const count = await User.countDocuments();
+    const count = await User.countDocuments(search ? searchQuery : {});
 
     res.json({
       users,
